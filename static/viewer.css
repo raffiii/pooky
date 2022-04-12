@@ -1,0 +1,14 @@
+#container {
+    width: 50%;
+    position: relative;
+}
+
+#the-canvas, #overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#overlay {
+    z-index: 1;
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test pdfjs</title>
+    <link rel="stylesheet" href="/static/viewer.css">
+</head>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
+
+
+<h1>PDF.js Previous/Next example</h1>
+
+<div>
+    <button id="prev">Previous</button>
+    <button id="next">Next</button>
+    &nbsp; &nbsp;
+    <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+
+    <input type="file" id="source_file" name="file" accept="application/pdf"/>
+    <button id="load_bboxes">Load bboxes</button>
+</div>
+
+<div id="container">
+    <canvas id="the-canvas" width="100"></canvas>
+    <canvas id="overlay"></canvas>
+</div>
+
+<script src="/static/viewer.js"></script>
+</html>
