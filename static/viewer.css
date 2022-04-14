@@ -1,6 +1,7 @@
 #container {
     width: 50%;
     position: relative;
+    left=0;
 }
 
 #the-canvas, #overlay {
@@ -11,4 +12,10 @@
 
 #overlay {
     z-index: 1;
+}
+
+#preview {
+    position: absolute;
+    top: 0;
+    left: 100%;
 }

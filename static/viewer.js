@@ -15,8 +15,10 @@ var pdfDoc = null,
     scale = 0.8,
     canvas = document.getElementById('the-canvas'),
     overlay = document.getElementById('overlay'),
+    preview = document.getElementById('preview'),
     ctx = canvas.getContext('2d'),
-    overlayCtx = overlay.getContext('2d');
+    overlayCtx = overlay.getContext('2d'),
+    previewCtx = preview.getContext('2d'),
     boxes = {};
 
 
@@ -45,12 +47,15 @@ function renderPage(num) {
   // Using promise to fetch the page
   pdfDoc.getPage(num).then(function(page) {
     var viewport = page.getViewport({scale: 1.});
-    scale = document.body.clientWidth / viewport.width / 2;
+    scale = document.body.clientWidth / viewport.width *.48;
     viewport = page.getViewport({scale: scale});
     canvas.height = viewport.height;
     canvas.width = viewport.width;
     overlay.height = viewport.height;
     overlay.width = viewport.width;
+    preview.height = viewport.height;
+    preview.width = viewport.width;
+
 
     // Render PDF page into canvas context
     var renderContext = {
