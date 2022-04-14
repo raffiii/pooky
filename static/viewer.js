@@ -78,7 +78,7 @@ function renderPage(num) {
 
 /**
  * If another page rendering in progress, waits until the rendering is
- * finised. Otherwise, executes rendering immediately.
+ * finished. Otherwise, executes rendering immediately.
  */
 function queueRenderPage(num) {
   if (pageRendering) {
@@ -156,4 +156,99 @@ document.getElementById('next').addEventListener('click', onNextPage);
             drawBoxes(pageNum-1);
         }
      });
+});
+
+var start = {};
+
+
+function getCoords(elem) { // crossbrowser version
+    var box = elem.getBoundingClientRect();
+
+    var body = document.body;
+    var docEl = document.documentElement;
+
+    var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+    var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+
+    var clientTop = docEl.clientTop || body.clientTop || 0;
+    var clientLeft = docEl.clientLeft || body.clientLeft || 0;
+
+    var top  = box.top +  scrollTop - clientTop;
+    var left = box.left + scrollLeft - clientLeft;
+
+    return { top: Math.round(top), left: Math.round(left) };
+}
+
+let get_overlay_coords = function(e) {
+    let x = e.pageX;
+    let y = e.pageY;
+    let coords = getCoords(overlay);
+    return {
+    x: (x - coords.left) / scale,
+    y:(y - coords.top) / scale
+    };
+
+}
+
+let end_create_box = function(e) {
+    let coords = get_overlay_coords(e);
+    var box = {
+        x0: start.x,
+        y0: start.y,
+        x1: coords.x,
+        y1: coords.y
+    };
+    boxes[pageNum-1].push(box);
+    drawBoxes(pageNum-1);
+}
+
+let end_delete_box = function(e) {
+    let coords = get_overlay_coords(e);
+    var box = {
+        x0: start.x,
+        y0: start.y,
+        x1: coords.x,
+        y1: coords.y
+    };
+    boxes[pageNum-1] = boxes[pageNum-1].filter(function(b) {
+        return !(b.x0 >= box.x0 && b.y0 >= box.y0 && b.x1 <= box.x1 && b.y1 <= box.y1);
+    });
+    drawBoxes(pageNum-1);
+}
+
+let select = document.getElementById('select_origin_mode');
+
+overlay.addEventListener('mousedown', function(e) {
+    start = get_overlay_coords(e);
+});
+
+overlay.addEventListener('mouseup', function(e) {
+    if(select.value == 'create') {
+        end_create_box(e);
+    } else if(select.value == 'delete') {
+        end_delete_box(e);
+    }
+});
+
+let container = document.getElementById('container');
+var active_box = null;
+container.addEventListener('click', function(e) {
+  var x = e.offsetX,
+      y = e.offsetY;
+  var page = pageNum-1;
+  active_box = boxes[page].find(function(b) {
+    return x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1;
+  });
+
+});
+
+container.addEventListener('blur', function(e) {
+  if (container.contains(document.activeElement)) {
+    return;
+  }
+  active_box = null;
+});
+
+$('#container > *').on('focus', function(e) {
+  $('#container').focus();
 });
