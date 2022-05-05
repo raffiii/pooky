@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Test pdfjs</title>
@@ -13,13 +14,12 @@
 
 <div>
     <button id="prev">Previous</button>
-    <button id="next">Next</button>
-    &nbsp; &nbsp;
+    <button id="next">Next</button> &nbsp; &nbsp;
     <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
 
-    <input type="file" id="source_file" name="file" accept="application/pdf"/>
+    <input type="file" id="source_file" name="file" accept="application/pdf" />
     <button id="load_bboxes">Load bboxes</button>
-    <span>Mouse: X=<span id="mousex"> </span>  Y=<span id="mousey"></span></span>
+    <span>Mouse: X=<span id="mousex"> </span> Y=<span id="mousey"></span></span>
     <input type="file" id="preset" name="preset" accept="application/json">
 </div>
 <div>
@@ -35,5 +35,9 @@
     <canvas id="preview"></canvas>
 </div>
 
-<script src="/static/viewer.js"></script>
+<script src="/static/structure.js"></script>
+<script src="/static/boxes.js"></script>
+<script src="/static/comm.js"></script>
+<script src="/static/main.js"></script>
+
 </html>

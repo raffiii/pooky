@@ -103,6 +103,7 @@ class Font(JSONable):
 class Page(JSONable):
     template: List[DisplayElement]
     inner: Box
+    content: List[DisplayElement]
 
     def insert(self, g, **_):
         return g.insert_page(self, **_)
@@ -111,7 +112,7 @@ class Page(JSONable):
 class Part(JSONable):
     page: Page
     first: Page
-    content: List[List[DisplayElement]]
+    content_pages: List[Page]
     name: str
 
     def insert(self, g, **_):

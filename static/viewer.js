@@ -1,8 +1,3 @@
-// If absolute URL from the remote server is provided, configure the CORS
-// header on that server.
-var url =
-    "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf";
-
 // Loaded via <script> tag, create shortcut to access PDF.js exports.
 var pdfjsLib = window["pdfjs-dist/build/pdf"];
 
@@ -84,7 +79,12 @@ function renderPage(num) {
     // Update page counters
     document.getElementById("page_num").textContent = num;
 }
-
+/*
+[
+  "ca15fbeeb7948213ae0b3f3270a02945",
+  "04f4ca0c1924abcdf16c30bd0a5a60a5"
+]
+*/
 /**
  * If another page rendering in progress, waits until the rendering is
  * finished. Otherwise, executes rendering immediately.
