@@ -111,6 +111,7 @@ $('#source_file').on('change', function(e) {
         var uint8Array = new Uint8Array(buffer);
         pdfjsLib.getDocument(uint8Array).promise.then(function(pdfDoc_) {
             data.pdf.doc = pdfDoc_;
+            data.doc.files[pdfDoc_.fingerprints[0]] = buffer;
             $("#page_count").html(data.pdf.doc.numPages);
 
             // Initial/first page rendering

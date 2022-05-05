@@ -16,7 +16,7 @@ $('#load_bboxes').on('click', function() {
                 for (box in response[page]) {
                     let pno = parseInt(page);
                     data.boxes.push(new ClipSrc({
-                        doc: file_data.name,
+                        doc: data.pdf.doc.fingerprints[0],
                         pno: pno,
                         box: response[page][box]
                     }));
@@ -32,4 +32,12 @@ $('#preset').on('click', function() {
         var data = JSON.parse(e.target.result);
         document_info = data;
     };
+});
+
+$('#generate_button').on('click', function() {
+    var form_data = new FormData();
+    form_data.append('info', data.doc.info);
+    for (file in data.doc.files) {
+        form_data.append(file, data.doc.files[file]);
+    }
 });

@@ -79,12 +79,6 @@ function renderPage(num) {
     // Update page counters
     document.getElementById("page_num").textContent = num;
 }
-/*
-[
-  "ca15fbeeb7948213ae0b3f3270a02945",
-  "04f4ca0c1924abcdf16c30bd0a5a60a5"
-]
-*/
 /**
  * If another page rendering in progress, waits until the rendering is
  * finished. Otherwise, executes rendering immediately.
