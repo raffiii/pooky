@@ -181,3 +181,5 @@ class Doc {
         this.files = doc.files || doc_defaults.files;
     }
 }
+
+/**[<logic.structure.Text object at 0x7fd89091e3e0>, <logic.structure.Text object at 0x7fd89091f9a0>, <logic.structure.Text object at 0x7fd89091f580>, <logic.structure.Text object at 0x7fd89091dba0>, <logic.structure.Text object at 0x7fd89091f4f0>, <logic.structure.Text object at 0x7fd89091e8c0>, <logic.structure.Text object at 0x7fd89091f940>, <logic.structure.Text object at 0x7fd89091f2b0>, <logic.structure.Text object at 0x7fd89091f8b0>, <logic.structure.Text object at 0x7fd89091e170>, <logic.structure.Text object at 0x7fd89091e7a0>, <logic.structure.Text object at 0x7fd89091e110>, <logic.structure.Text object at 0x7fd89091e7d0>, <logic.structure.Text object at 0x7fd89091eb30>, <logic.structure.Text object at 0x7fd89091f370>, <logic.structure.Text object at 0x7fd89091ed70>, <logic.structure.Text object at 0x7fd89091f010>, <logic.structure.Text object at 0x7fd89091dc90>, <logic.structure.Text object at 0x7fd89091c070>, <logic.structure.Text object at 0x7fd89091e1a0>] */

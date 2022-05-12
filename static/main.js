@@ -20,6 +20,7 @@ var data = {
         start: {},
         container: document.getElementById("container"),
         active_box: null,
+        active_boxes: [],
         overlay: document.getElementById("overlay"),
     },
     preview: {

@@ -3,13 +3,10 @@ from os.path import abspath, splitext
 from typing import Union, Tuple, List, Dict, Optional
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from logic.util import JSONable
+import fitz
 
-Box = Tuple[int, int, int, int]
-Size = Tuple[int, int]
-Point = Tuple[int, int]
-Color = Tuple[float, float, float]
-Placing = Union[Box, Size]
+from logic.util import JSONable
+from logic.util import Box, Color, Placing, Size, Point
 
 
 class FileType:
@@ -79,7 +76,7 @@ class Text(DisplayElement):
     font: str = ""
     size: int = 0
     color: Color
-    align: str = ""
+    align: int = fitz.TEXT_ALIGN_LEFT
     # replacements: position in text with content hint
     insertions: List[Tuple[int, str]] = {}
 
@@ -139,7 +136,7 @@ class Doc:
         # Create new Info
         if json_conf is not None:
             conf = json.loads(json_conf)
-            self.info = Info.of_dict(**conf)
+            self.info = Info(**conf)
         elif path is None:
             self.info = Info()
         # Load Info from Zipfile
@@ -148,7 +145,7 @@ class Doc:
             conf = None
             with z.open("info.json") as f:
                 conf = json.loads(f.read())
-            self.info = Info.of_dict(**conf)
+            self.info = Info(**conf)
             # Import all referenced files
             for name in z.namelist():
                 if name != "info.json":
@@ -198,3 +195,14 @@ class Doc:
                 deflate_fonts=True,
                 linear=True,
             )
+
+
+def hook(d):
+    cls = {c.mro()[0].__name__: c for c in [ClipSrc, ClipDst, Erase, Line, Image, Text, Font, Page, Part, Info, Doc]}
+    if '__name__' in d and d['__name__'] in cls:
+        return cls[d['__name__']](**d)
+    return d
+
+
+def from_json(j):
+    return json.loads(j, object_hook=hook)

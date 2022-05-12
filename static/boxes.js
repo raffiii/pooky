@@ -137,7 +137,7 @@ function endGroupBox(e) {
 
 }
 
-$('#container, #container *').on('mousedown', function(e) {
+$('#container').on('mousedown', function(e) {
     data.overlay.start = getOverlayCoords(e);
 }).on('mouseup', function(e) {
     if (data.interactions.select.value == "create") {
@@ -146,5 +146,33 @@ $('#container, #container *').on('mousedown', function(e) {
         endDeleteBox(e);
     } else if (data.interactions.select.value == "group") {
         endGroupBox(e);
+    }
+});
+
+$('#container').on('click', function(e) {
+    let coords = getOverlayCoords(e);
+    let active_boxes = data.boxes.filter(b =>
+        b.pno == data.pdf.pageNum - 1 &&
+        b.box.x0 <= coords.x &&
+        b.box.y0 <= coords.y &&
+        b.box.x1 >= coords.x &&
+        b.box.y1 >= coords.y
+    );
+    if (active_boxes != data.overlay.active_boxes) {
+        data.overlay.active_boxes = active_boxes;
+        data.overlay.active_box = active_boxes[0];
+    } else {
+        let i = data.overlay.active_boxes.indexOf(data.overlay.active_box);
+        data.overlay.active_boxes = data.overlay.active_boxes[(i + 1) % data.overlay.active_boxes.length];
+    }
+    drawBoxes(data.pdf.pageNum - 1);
+});
+
+$('#container').on('keypress', function(e) {
+    let code = e.keyCode || e.which;
+    if (data.overlay.active_box == null) return;
+    if ('123456789'.includes(code)) {
+        let i = int(code - '1'.charCodeAt(0));
+        data.doc.info.parts[0].insert_box = data.overlay.active_box;
     }
 });
