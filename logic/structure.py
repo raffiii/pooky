@@ -1,3 +1,4 @@
+import base64
 import json
 from os.path import abspath, splitext
 from typing import Union, Tuple, List, Dict, Optional
@@ -121,7 +122,7 @@ class Info(JSONable):
     fonts: Dict[str, Font]
     # Map replacement hints to actual text
     replaced: Dict[str, str]
-    clips: Dict[str, List[ClipSrc]]
+    clips: List[ClipSrc]
 
     def insert(self, g, **_):
         return g.insert_info(self, **_)
@@ -131,12 +132,45 @@ class Doc:
     info: Info
     files: Dict[str, bytes]
 
-    def __init__(self, path=None, json_conf: str = None, files: Dict[str, bytes] = None):
+    def __init__(
+            self, path=None, json_conf: str = None, files: Dict[str, bytes] = None, info: Info = None, **_
+    ):
         self.files = files if files is not None else {}
+        self.files = {n: f if type(f) == bytes else base64.b64decode(f) for n, f in self.files.items()}
+
         # Create new Info
-        if json_conf is not None:
-            conf = json.loads(json_conf)
-            self.info = Info(**conf)
+        def hook(d):
+            cls = {
+                c.mro()[0].__name__: c
+                for c in [
+                    ClipSrc,
+                    ClipDst,
+                    Erase,
+                    Line,
+                    Image,
+                    Text,
+                    Font,
+                    Page,
+                    Part,
+                    Info,
+                    Doc,
+                ]
+            }
+            if "__name__" in d and d["__name__"] in cls:
+                return cls[d["__name__"]](**d)
+            if "name" in d and d["name"] in cls:
+                return cls[d["name"]](**d)
+            return d
+
+        if info is not None:
+            self.info = info
+        elif json_conf is not None:
+            o = json.loads(json_conf, object_hook=hook)
+            if (hasattr(o, 'name') and o.name == 'Doc') or isinstance(o, Doc):
+                self.info = o.info
+                self.files = o.files
+            else:
+                self.info = o
         elif path is None:
             self.info = Info()
         # Load Info from Zipfile
@@ -144,8 +178,7 @@ class Doc:
             z = ZipFile(path)
             conf = None
             with z.open("info.json") as f:
-                conf = json.loads(f.read())
-            self.info = Info(**conf)
+                self.info = json.load(f, object_hook=hook)
             # Import all referenced files
             for name in z.namelist():
                 if name != "info.json":
@@ -164,7 +197,6 @@ class Doc:
             try:
                 with open(path, "rb") as f:
                     self.files[h] = f.read()
-                    self.info.clips[h] = {}
             except IOError:
                 print("Error while opening file")
         return h
@@ -178,13 +210,29 @@ class Doc:
                 z.writestr(name, file)
             z.writestr("info.json", conf)
 
-    def create_pdf(self):
-        return self.info.insert(self.files)
+    def create_pdf(self, generator):
+        result = fitz.open()
+        self.info.insert(generator, files=self.files, result=result)
+        return result
 
-    def export(self, filename: str = None):
-        d = self.create_pdf()
+    def json_dump(self):
+        import base64
+        return json.dumps(
+            {"name": "Doc", "info": self.info.to_dict(),
+             "files": {n: base64.b64encode(f).decode() for n, f in self.files.items()}}
+        )
+
+    def export(self, generator, filename: str = None):
+        d = self.create_pdf(generator)
         if filename is None:
-            return d.tobytes(defate=True, garbage=4, clean=True, deflate_images=True, deflate_fonts=True, linear=True)
+            return d.tobytes(
+                deflate=True,
+                garbage=4,
+                clean=True,
+                deflate_images=True,
+                deflate_fonts=True,
+                linear=True,
+            )
         else:
             d.save(
                 filename,
@@ -195,14 +243,3 @@ class Doc:
                 deflate_fonts=True,
                 linear=True,
             )
-
-
-def hook(d):
-    cls = {c.mro()[0].__name__: c for c in [ClipSrc, ClipDst, Erase, Line, Image, Text, Font, Page, Part, Info, Doc]}
-    if '__name__' in d and d['__name__'] in cls:
-        return cls[d['__name__']](**d)
-    return d
-
-
-def from_json(j):
-    return json.loads(j, object_hook=hook)

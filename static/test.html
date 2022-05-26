@@ -19,15 +19,22 @@
 
     <input type="file" id="source_file" name="file" accept="application/pdf" />
     <button id="load_bboxes">Load bboxes</button>
-    <span>Mouse: X=<span id="mousex"> </span> Y=<span id="mousey"></span></span>
-    <input type="file" id="preset" name="preset" accept="application/json">
+    <button id="preset">Load Preset</button>
+    <button id="generate_button">Generate PDF</button>
 </div>
 <div>
     <select id="select_origin_mode">
         <option value="create">Create Boxes</option>
         <option value="delete">Delete Boxes</option>
         <option value="group">Group Boxes</option>
+        <option value="add">Add Boxes</option>
     </select>
+    <select id="select_part">
+        
+    </select>
+</div>
+<div id="repl_container">
+
 </div>
 
 <div id="container">

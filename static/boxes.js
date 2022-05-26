@@ -27,11 +27,55 @@ function getOverlayCoords(e) {
     };
 }
 
+function getContainedBoxes(e) {
+    let coords = getOverlayCoords(e);
+    var box = {
+        x0: data.overlay.start.x,
+        y0: data.overlay.start.y,
+        x1: coords.x,
+        y1: coords.y,
+    };
+
+    let boxes = data.boxes.filter(b => {
+        return (b.pno == data.pdf.pageNum - 1 &&
+            b.box.x0 >= box.x0 &&
+            b.box.y0 >= box.y0 &&
+            b.box.x1 <= box.x1 &&
+            b.box.y1 <= box.y1);
+    });
+    return boxes;
+}
+
+function overlaps(b, c) {
+    return !(b.x1 < c.x0 || b.x0 > c.x1 || b.y1 < c.y0 || b.y0 > c.y1);
+}
+
+function merge_overlapping_boxes(boxes) {
+    let unchecked = boxes.slice();
+    let merged = [];
+    while (unchecked.length > 0) {
+        let box = unchecked.pop();
+        for (let j = 0; j < merged.length; j++) {
+            let mbox = merged[j];
+            if (overlaps(box, mbox)) {
+                mbox.x0 = Math.min(mbox.x0, box.x0);
+                mbox.y0 = Math.min(mbox.y0, box.y0);
+                mbox.x1 = Math.max(mbox.x1, box.x1);
+                mbox.y1 = Math.max(mbox.y1, box.y1);
+
+                unchecked.push(mbox);
+                merged.splice(j, 1);
+            } else {
+                merged.push(box);
+            }
+        }
+    }
+}
 
 
 function drawBoxes(pno) {
     console.log("draw boxes", pno);
-    let boxes = data.boxes.filter(b => b.doc == data.pdf.doc.fingerprints[0] && b.pno == pno);
+    let boxes = data.boxes.filter(b => b.doc == data.pdfname && b.pno == pno);
     let ctx = data.overlay.overlay.getContext('2d');
     let canvas = data.overlay.overlay;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -59,11 +103,10 @@ function endCreateBox(e) {
     };
 
     data.boxes.push(new ClipSrc({
-        doc: data.pdf.doc.fingerprints[0],
+        doc: data.pdfname,
         pno: data.pdf.pageNum - 1,
         box: box
     }));
-    drawBoxes(data.pdf.pageNum - 1);
 }
 
 function endDeleteBox(e) {
@@ -85,26 +128,10 @@ function endDeleteBox(e) {
         )
     });
 
-    drawBoxes(data.pdf.pageNum - 1);
 }
 
 function endGroupBox(e) {
-    let coords = getOverlayCoords(e);
-    var box = {
-        x0: data.overlay.start.x,
-        y0: data.overlay.start.y,
-        x1: coords.x,
-        y1: coords.y,
-    };
-
-    console.log("group box", box);
-    let old_boxes = data.boxes.filter(b => {
-        return b.pno == data.pdf.pageNum - 1 &&
-            b.box.x0 >= box.x0 &&
-            b.box.y0 >= box.y0 &&
-            b.box.x1 <= box.x1 &&
-            b.box.y1 <= box.y1
-    });
+    let old_boxes = getContainedBoxes(e);
     let new_box = old_boxes.reduce(
         (acc, b) => {
             return {
@@ -120,21 +147,20 @@ function endGroupBox(e) {
             y1: -Infinity
         }
     )
-    data.boxes = data.boxes.filter(b => {
-        return b.pno != data.pdf.pageNum - 1 || !(
-            b.box.x0 >= new_box.x0 &&
-            b.box.y0 >= new_box.y0 &&
-            b.box.x1 <= new_box.x1 &&
-            b.box.y1 <= new_box.y1
-        )
-    });
+    endDeleteBox(e);
     data.boxes.push(new ClipSrc({
-        doc: data.pdf.doc.fingerprints[0],
+        doc: data.pdfname,
         pno: data.pdf.pageNum - 1,
         box: new_box
     }));
-    drawBoxes(data.pdf.pageNum - 1);
 
+}
+
+function appendBox(e) {
+    let boxes = merge_overlapping_boxes(getContainedBoxes(e));
+    boxes.forEach(b => {
+        data.doc.info.parts[document.getElementById('select_part').value].insert_box(b);
+    });
 }
 
 $('#container').on('mousedown', function(e) {
@@ -146,7 +172,11 @@ $('#container').on('mousedown', function(e) {
         endDeleteBox(e);
     } else if (data.interactions.select.value == "group") {
         endGroupBox(e);
+    } else if (data.interactions.select.value == "add") {
+        appendBox(e);
     }
+
+    drawBoxes(data.pdf.pageNum - 1);
 });
 
 $('#container').on('click', function(e) {

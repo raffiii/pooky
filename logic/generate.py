@@ -8,11 +8,14 @@ import logic.structure as structure
     structure.Box, structure.Size, structure.Point, structure.Color, structure.Placing, structure.FileType)
 
 
-def get_box(dst: Placing, src: Box):
-    if len(dst.box) == 4:
-        return dst.box
-    else:
-        return dst[:2] + src[2:]
+def get_box(dst: Placing, src: Box = None):
+    if type(dst) == dict:
+        return [dst[loc] for loc in ['x0', 'y0', 'x1', 'y1']]
+    if len(dst) == 4:
+        return dst
+    if src is None:
+        raise ValueError('src not specified but required')
+    return dst[:2] + src[2:]
 
 
 def shrink_box(box: Box, placed_box: Placing):
@@ -42,11 +45,11 @@ class Generator:
         if clip.src.doc not in documents:
             documents[clip.src.doc] = fz.open(filetype=clip.src.doc, stream=files[clip.src.doc])
         try:
-            page.show_pdf_page(box, documents[clip.src.doc], pno=clip.src.pno,
-                               clip=clip.src.box)
+            page.show_pdf_page(fz.Rect(box), documents[clip.src.doc], pno=clip.src.pno,
+                               clip=get_box(clip.src.box))
         except ValueError:
             print("Could not insert clip at", clip.box)
-        for erase in clip.erases:
+        for erase in clip.src.erase:
             erase.insert(g=self, page=page, documents=documents, **_)
         return shrink_box(outer_box, box)
 
@@ -65,31 +68,32 @@ class Generator:
         return shrink_box(outer_box, box)
 
     def insert_text(self, txt: structure.Text, page: fz.Page, replacements: Dict[str, str], outer_box: Box, **_):
-        replacements = replacements | {"pno": str(page.number + 1)}
-        replaced = [(i, replacements[hint]) for i, hint in txt.insertions]
+        replacements = replacements | {"?pno": str(page.number + 1)}
+        replaced = [(i, replacements[hint]) if hint in replacements else (i, '') for i, hint in txt.insertions]
         replaced = sorted(replaced, key=lambda x: x[0])
         text = txt.text
-        for i, r in replaced:
+        for i, r in reversed(replaced):
             text = text[:i] + r + text[i + 1:]
-        page.insert_textbox(rect=txt.box, buffer=text, fontsize=txt.size, font=txt.font, align=txt.align,
-                            fill=txt.color)
+        params = {'rect': txt.box, 'buffer': text, 'fontsize': txt.size, 'align': txt.align, 'fill': txt.color}
+        if txt.font and txt.font != '':
+            params['fontname'] = txt.font
+        page.insert_textbox(**params)
         return shrink_box(outer_box, txt.box)
 
     def insert_line(self, line: structure.Line, page: fz.Page, outer_box: Box, **_):
         page.draw_line(line.p, line.q)
         return outer_box
 
-    def insert_page(self, page_info: structure.Page, elements: List[structure.DisplayElement], **_):
+    def insert_page(self, page_info: structure.Page, **_):
         inner_box = page_info.inner
-        for e in page_info.template + elements:
+        for e in page_info.template + page_info.content:
             inner_box = e.insert(g=self, outer_box=inner_box, **_)
 
     def insert_part(self, part: structure.Part, result: fz.Document, **_):
-        pages = zip([part.first] + [part.page] * (len(part.content) - 1), part.content)
-        for p, c in pages:
+        for p in part.content_pages:
             page = result.new_page()
-            page.insert(g=self, elements=c, pageinfo=p, page=page, **_)
+            p.insert(g=self, pageinfo=p, page=page, **_)
 
     def insert_info(self, info: structure.Info, result: fz.Document, files: Dict[str, bytes], **_):
         for part in info.parts:
-            part.insert(g=self, result=result, files=files, **_)
+            part.insert(g=self, result=result, files=files, documents={}, replacements=info.replaced, **_)

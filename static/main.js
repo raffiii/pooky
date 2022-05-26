@@ -10,6 +10,7 @@ var data = {
         pageNum: 1,
         scale: 0.8
     },
+    pdfname: "",
     rendering: {
         page: false,
         pageNumPending: null,
@@ -30,6 +31,7 @@ var data = {
     doc: new Doc({}),
     interactions: {
         select: document.getElementById("select_origin_mode"),
+        part: document.getElementById('select_part')
     },
     get boxes() {
         return this.doc.info.clips;
@@ -112,9 +114,41 @@ $('#source_file').on('change', function(e) {
         var uint8Array = new Uint8Array(buffer);
         pdfjsLib.getDocument(uint8Array).promise.then(function(pdfDoc_) {
             data.pdf.doc = pdfDoc_;
-            data.doc.files[pdfDoc_.fingerprints[0]] = buffer;
+            data.pdfname = pdfDoc_.fingerprints[0] + ".pdf";
+            data.doc.files[data.pdfname] = window.btoa(uint8Array);
             $("#page_count").html(data.pdf.doc.numPages);
 
+            let fd = new FormData();
+            fd.append("file", file);
+
+            $.ajax({
+                url: '/b64pdf',
+                dataType: 'text',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: fd,
+                type: 'post',
+                success: function(response) {
+                    console.log(response);
+                    data.doc.files[data.pdfname] = response;
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            }); //*/
+            /*fetch("/b64pdf", {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                    body: fd,
+                })
+                .then((response) => response.json())
+                .then((json) => { data.doc.files[data.pdfname] = json[0]; })
+                .catch((error) => { console.log(error); });
+            // */
             // Initial/first page rendering
             renderPage(data.pdf.pageNum);
         });
