@@ -155,6 +155,9 @@ class Doc:
                     Info,
                     Doc,
                 ]
+            } | {
+                'TextBox': Text,
+                'ImageBox': Image
             }
             if "__name__" in d and d["__name__"] in cls:
                 return cls[d["__name__"]](**d)
