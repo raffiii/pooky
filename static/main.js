@@ -132,27 +132,18 @@ $('#source_file').on('change', function(e) {
                 success: function(response) {
                     console.log(response);
                     data.doc.files[data.pdfname] = response;
+                    load_bboxes();
                 },
                 error: function(error) {
                     console.log(error);
                 }
-            }); //*/
-            /*fetch("/b64pdf", {
-                    method: "POST",
-                    mode: "cors",
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                    body: fd,
-                })
-                .then((response) => response.json())
-                .then((json) => { data.doc.files[data.pdfname] = json[0]; })
-                .catch((error) => { console.log(error); });
-            // */
-            // Initial/first page rendering
+            });
             renderPage(data.pdf.pageNum);
+
         });
     };
 
     fileReader.readAsArrayBuffer(file);
 });
+
+fetch_preset();

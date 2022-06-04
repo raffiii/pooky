@@ -17,7 +17,7 @@ async function postData(url = "", data = {}) {
     return await response; // parses JSON response into native JavaScript objects
 }
 
-$("#load_bboxes").on("click", function() {
+function load_bboxes() {
     var file_data = $("#source_file").prop("files")[0];
     var form_data = new FormData();
     form_data.append("file", file_data);
@@ -45,9 +45,10 @@ $("#load_bboxes").on("click", function() {
             drawBoxes(data.pdf.pageNum - 1);
         },
     });
-});
+}
 
-document.getElementById("preset").addEventListener("click", function() {
+
+function fetch_preset() {
     let promise = fetch("vorlage.json")
         .then((response) => response.json())
         .then((json) => {
@@ -87,18 +88,22 @@ document.getElementById("preset").addEventListener("click", function() {
                 repl_container.appendChild(br);
             });
         });
-});
+}
 
-document
-    .getElementById("generate_button")
-    .addEventListener("click", function() {
-        postData("/generate", JSON.stringify(data.doc))
-            .then((res) => res.blob())
-            .then((blob) => {
-                // open PDF in PoP-Up (maybe use a download link instead)
-                var newBlob = new Blob([blob], { type: "application/pdf" });
-                var file = window.URL.createObjectURL(newBlob);
-                window.open(file);
-            })
-            .catch((err) => console.log(err));
-    });
+function generate_pdf() {
+    postData("/generate", JSON.stringify(data.doc))
+        .then((res) => res.blob())
+        .then((blob) => {
+            // open PDF in PoP-Up (maybe use a download link instead)
+            var newBlob = new Blob([blob], { type: "application/pdf" });
+            var file = window.URL.createObjectURL(newBlob);
+            window.open(file);
+        })
+        .catch((err) => console.log(err));
+}
+
+
+
+$("#load_bboxes").on("click", load_bboxes);
+document.getElementById("preset").addEventListener("click", fetch_preset);
+document.getElementById("generate_button").addEventListener("click", generate_pdf);
