@@ -51,25 +51,32 @@ function overlaps(b, c) {
 }
 
 function merge_overlapping_boxes(boxes) {
-    let unchecked = boxes.slice();
-    let merged = [];
-    while (unchecked.length > 0) {
-        let box = unchecked.pop();
-        for (let j = 0; j < merged.length; j++) {
-            let mbox = merged[j];
-            if (overlaps(box, mbox)) {
-                mbox.x0 = Math.min(mbox.x0, box.x0);
-                mbox.y0 = Math.min(mbox.y0, box.y0);
-                mbox.x1 = Math.max(mbox.x1, box.x1);
-                mbox.y1 = Math.max(mbox.y1, box.y1);
-
-                unchecked.push(mbox);
-                merged.splice(j, 1);
-            } else {
-                merged.push(box);
-            }
-        }
+    let merged = boxes.slice();
+    var overlapping = false;
+    do {
+        overlapping = false;
+        for (var i = 0; i < merged.length; i++)
+            for (var j = i + 1; j < merged.length; j++)
+                if (overlaps(merged[i].box, merged[j].box)) {
+                    // setup
+                    let b = merged.pop(j);
+                    let c = merged.pop(i);
+                    j = i + 1;
+                    overlapping = true;
+                    // merge
+                    let clip = Object.assign({}, c);
+                    clip.box = {
+                            x0: Math.min(c.box.x0, b.box.x0),
+                            y0: Math.min(c.box.y0, b.box.y0),
+                            x1: Math.max(c.box.x1, b.box.x1),
+                            y1: Math.max(c.box.y1, b.box.y1)
+                        }
+                        // add back
+                    merged.push(clip);
+                }
     }
+    while (overlapping);
+    return merged;
 }
 
 
