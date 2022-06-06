@@ -1,10 +1,22 @@
-#container {
-    width: 50%;
-    position: relative;
-    left=0;
+@import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
+.menu {
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 10%;
+    height: 100%;
+    background-color: #f8f8f8;
 }
 
-#the-canvas, #overlay {
+#container {
+    width: 45%;
+    position: relative;
+    left: 10%;
+}
+
+#the-canvas,
+#overlay {
     position: absolute;
     top: 0;
     left: 0;

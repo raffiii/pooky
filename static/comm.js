@@ -71,21 +71,8 @@ function fetch_preset() {
             Object.entries(data.doc.info.replaced).forEach((repl, i) => {
                 let name = repl[0],
                     value = repl[1];
-                let input = document.createElement("input");
-                input.type = "text";
-                input.placeholder = name;
-                input.value = value;
-                input.id = "repl_" + i;
-                input.addEventListener("change", function() {
-                    data.doc.info.replaced[name] = input.value;
-                });
-                let label = document.createElement("label");
-                label.innerText = name;
-                label.setAttribute("for", "repl_" + i);
-                let br = document.createElement("br");
-                repl_container.appendChild(label);
+                let input = new_text_field("repl_" + i, name, value, name, () => {});
                 repl_container.appendChild(input);
-                repl_container.appendChild(br);
             });
         });
 }

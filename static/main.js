@@ -2,7 +2,7 @@ var pdfjsLib = window["pdfjs-dist/build/pdf"];
 
 // The workerSrc property shall be specified.
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "//mozilla.github.io/pdf.js/build/pdf.worker.js";
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.min.js";
 
 var data = {
     pdf: {
@@ -130,7 +130,6 @@ $('#source_file').on('change', function(e) {
                 data: fd,
                 type: 'post',
                 success: function(response) {
-                    console.log(response);
                     data.doc.files[data.pdfname] = response;
                     load_bboxes();
                 },
