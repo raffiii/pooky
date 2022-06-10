@@ -53,6 +53,7 @@ async def export_pdf(response: Response, files: List[UploadFile] = [], json: str
 @app.post("/generate")
 async def generate_pdf(info: Request):
     j = await info.json()
+    j = j.encode().decode('unicode-escape')
     doc = logic.structure.Doc(json_conf=j)
     gen = logic.generate.Generator()
     return Response(content=doc.export(gen), media_type='application/pdf',

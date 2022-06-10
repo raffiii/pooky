@@ -47,8 +47,8 @@ class Generator:
         try:
             page.show_pdf_page(fz.Rect(box), documents[clip.src.doc], pno=clip.src.pno,
                                clip=get_box(clip.src.box))
-        except ValueError:
-            print("Could not insert clip at", clip.box)
+        except ValueError as e:
+            print("Could not insert clip at", clip.box, e.args)
         for erase in clip.src.erase:
             erase.insert(g=self, page=page, documents=documents, **_)
         return shrink_box(outer_box, box)
@@ -73,11 +73,16 @@ class Generator:
         replaced = sorted(replaced, key=lambda x: x[0])
         text = txt.text
         for i, r in reversed(replaced):
-            text = text[:i] + r + text[i + 1:]
-        params = {'rect': txt.box, 'buffer': text, 'fontsize': txt.size, 'align': txt.align, 'fill': txt.color}
+            # insert r at i
+            text = text[:i] + r + text[i:]
+        params = {'rect': txt.box, 'text': text, 'fontsize': txt.size, 'align': txt.align}
         if txt.font and txt.font != '':
             params['fontname'] = txt.font
-        page.insert_textbox(**params)
+        print(text)
+        tw = fz.TextWriter(page.bound())
+        tw.fill_textbox(**params)
+        tw.write_text(page, color=txt.color)
+        #page.insert_textbox(**params)
         return shrink_box(outer_box, txt.box)
 
     def insert_line(self, line: structure.Line, page: fz.Page, outer_box: Box, **_):
