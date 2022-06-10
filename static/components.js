@@ -7,8 +7,8 @@ function new_text_field(id, label, value, hint, onchange) {
     input.id = id;
     input.placeholder = hint;
     input.value = value;
+    input.addEventListener("change", onchange);
     label_elem.setAttribute("for", id);
     label_elem.innerText = label;
-    label_elem.addEventListener("change", onchange);
     return text_field;
 }

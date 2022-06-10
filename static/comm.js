@@ -71,7 +71,7 @@ function fetch_preset() {
             Object.entries(data.doc.info.replaced).forEach((repl, i) => {
                 let name = repl[0],
                     value = repl[1];
-                let input = new_text_field("repl_" + i, name, value, name, () => {});
+                let input = new_text_field("repl_" + i, name, value, name, (ev) => { data.doc.info.replaced[name] = ev.target.value; });
                 repl_container.appendChild(input);
             });
         });
