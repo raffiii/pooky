@@ -7,7 +7,7 @@ from fastapi import FastAPI, UploadFile, File, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
-from starlette.responses import PlainTextResponse
+from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.staticfiles import StaticFiles
 
 import logic.generate
@@ -31,6 +31,21 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*']
 )
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return """
+    <html>
+        <head>
+            <title>Pooky - Klausurenumbruch</title>
+        </head>
+        <body>
+            <h1>Pooky - Klausurenumbruch</h1>
+            <p> 
+                <a href="/static/test.html">Generate</a>
+            </p>
+        </body>
+    </html>"""
 
 
 # List all bounding boxes for a given pdf document
