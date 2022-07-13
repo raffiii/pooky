@@ -100,6 +100,24 @@ function drawBoxes(pno) {
 
 }
 
+function drawBlockedRegions(pno) {
+    let pages = data.doc.info.parts[document.getElementById('select_part').value].content_pages;
+    let inner = pages[pno].inner;
+    let ctx = data.preview.preview.getContext('2d');
+    let canvas = data.preview.preview;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    ctx.fillStyle = "#BBFFB0";
+    let scale = data.pdf.scale;
+    let c = {x0: inner.x0||inner[0], y0: inner.y0||inner[1], x1: inner.x1||inner[2], y1: inner.y1||inner[3]};
+    var x = c.x0 * scale,
+    y = c.y0 * scale,
+    w = (c.x1 - c.x0) * scale,
+    h = (c.y1 - c.y0) * scale;
+    console.log("draw blocked regions", pno, x, y, w, h);
+    ctx.fillRect(x, y, w, h);
+}
+
 function endCreateBox(e) {
     let coords = getOverlayCoords(e);
     var box = {
@@ -181,6 +199,8 @@ $('#container').on('mousedown', function(e) {
         endGroupBox(e);
     } else if (data.interactions.select.value == "add") {
         appendBox(e);
+        let pno = data.doc.info.parts[document.getElementById('select_part').value].content_pages.length;
+        drawBlockedRegions(pno - 1);
     }
 
     drawBoxes(data.pdf.pageNum - 1);

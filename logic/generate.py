@@ -75,14 +75,12 @@ class Generator:
         for i, r in reversed(replaced):
             # insert r at i
             text = text[:i] + r + text[i:]
-        params = {'rect': txt.box, 'text': text, 'fontsize': txt.size, 'align': txt.align}
+        params = {'rect': txt.box, 'buffer': text, 'fontsize': txt.size, 'align': txt.align,
+                  'encoding': fz.TEXT_ENCODING_LATIN, 'fill': txt.color}
         if txt.font and txt.font != '':
             params['fontname'] = txt.font
         print(text)
-        tw = fz.TextWriter(page.bound())
-        tw.fill_textbox(**params)
-        tw.write_text(page, color=txt.color)
-        #page.insert_textbox(**params)
+        page.insert_textbox(**params)
         return shrink_box(outer_box, txt.box)
 
     def insert_line(self, line: structure.Line, page: fz.Page, outer_box: Box, **_):
