@@ -42,7 +42,7 @@ var data = {
 }
 console.log(data);
 
-function renderPage(num) {
+function renderPage(num, ctx = data.rendering.ctx) {
     data.rendering.page = true;
     // Using promise to fetch the page
     data.pdf.doc.getPage(num).then(function(page) {
@@ -58,7 +58,7 @@ function renderPage(num) {
 
         // Render PDF page into canvas context
         var renderContext = {
-            canvasContext: data.rendering.ctx,
+            canvasContext: ctx,
             viewport: viewport
         };
         var renderTask = page.render(renderContext);

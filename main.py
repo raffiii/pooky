@@ -3,7 +3,7 @@ import base64
 import json
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File, Request, Response
+from fastapi import FastAPI, File, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
@@ -68,7 +68,6 @@ async def export_pdf(response: Response, files: List[UploadFile] = [], json: str
 @app.post("/generate")
 async def generate_pdf(info: Request):
     j = await info.json()
-    j = j.encode().decode('unicode-escape')
     doc = logic.structure.Doc(json_conf=j)
     gen = logic.generate.Generator()
     return Response(content=doc.export(gen), media_type='application/pdf',

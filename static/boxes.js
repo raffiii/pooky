@@ -66,12 +66,12 @@ function merge_overlapping_boxes(boxes) {
                     // merge
                     let clip = Object.assign({}, c);
                     clip.box = {
-                            x0: Math.min(c.box.x0, b.box.x0),
-                            y0: Math.min(c.box.y0, b.box.y0),
-                            x1: Math.max(c.box.x1, b.box.x1),
-                            y1: Math.max(c.box.y1, b.box.y1)
-                        }
-                        // add back
+                        x0: Math.min(c.box.x0, b.box.x0),
+                        y0: Math.min(c.box.y0, b.box.y0),
+                        x1: Math.max(c.box.x1, b.box.x1),
+                        y1: Math.max(c.box.y1, b.box.y1)
+                    }
+                    // add back
                     merged.push(clip);
                 }
     }
@@ -100,8 +100,9 @@ function drawBoxes(pno) {
 
 }
 
-function drawBlockedRegions(pno) {
-    let pages = data.doc.info.parts[document.getElementById('select_part').value].content_pages;
+function drawBlockedRegions(pno,part_name=null) {
+    let part = part_name || document.getElementById('select_part').value;
+    let pages = data.doc.info.parts[part].content_pages;
     let inner = pages[pno].inner;
     let ctx = data.preview.preview.getContext('2d');
     let canvas = data.preview.preview;
@@ -109,13 +110,61 @@ function drawBlockedRegions(pno) {
     ctx.lineWidth = 2;
     ctx.fillStyle = "#BBFFB0";
     let scale = data.pdf.scale;
-    let c = {x0: inner.x0||inner[0], y0: inner.y0||inner[1], x1: inner.x1||inner[2], y1: inner.y1||inner[3]};
+    let c = { x0: inner.x0 || inner[0], y0: inner.y0 || inner[1], x1: inner.x1 || inner[2], y1: inner.y1 || inner[3] };
     var x = c.x0 * scale,
-    y = c.y0 * scale,
-    w = (c.x1 - c.x0) * scale,
-    h = (c.y1 - c.y0) * scale;
+        y = c.y0 * scale,
+        w = (c.x1 - c.x0) * scale,
+        h = (c.y1 - c.y0) * scale;
     console.log("draw blocked regions", pno, x, y, w, h);
     ctx.fillRect(x, y, w, h);
+    drawPlaced(part, pno);
+}
+
+function drawPlaced(part, pno) {
+    let page = data.doc.info.parts[part].content_pages[pno];
+    let ctx = data.preview.preview.getContext('2d');
+    let canvas = data.preview.preview;
+    let bgCanvas = document.createElement('canvas');
+    bgCanvas.width = canvas.width;
+    bgCanvas.height = canvas.height;
+    let bgCtx = bgCanvas.getContext('2d');
+
+    let pnos = new Set(page.content.map(cd => cd.src.pno));
+    pnos.forEach(p => {
+        let boxes = data.boxes.filter(b => b.doc == data.pdfname && b.pno == p);
+        getBoxesOnPage(p, boxes, bgCtx).then(boxes => {
+            boxes.forEach(b => {
+                ctx.putImageData(b.img, b.x0 || b[0], b.y0 || b[1]);
+            });
+        })
+    });
+}
+
+function getBoxesOnPage(pno, boxes, ctx) {
+    console.log("get boxes on page", pno, boxes);
+    return data.pdf.doc.getPage(pno).then(async (page) => {
+
+        // Render PDF page into background canvas context
+        var renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+        };
+        var renderTask = page.render(renderContext);
+
+        return await renderTask.promise.then(function () {
+            boxes.filter(b => b.pno == pno).map(b => {
+                if (b.pno == pno) {
+                    let scale = data.pdf.scale;
+                    let x = b.src.box.x0 * scale,
+                        y = b.src.box.y0 * scale,
+                        w = (b.src.box.x1 - b.src.box.x0) * scale,
+                        h = (b.src.box.y1 - b.src.box.y0) * scale;
+                    return { img: ctx.getImageData(x, y, w, h), box: b.box };
+                }
+                return { img: null, box: b.box };
+            })
+        });
+    });
 }
 
 function endCreateBox(e) {
@@ -166,11 +215,11 @@ function endGroupBox(e) {
                 y1: Math.max(acc.y1, b.box.y1)
             }
         }, {
-            x0: Infinity,
-            y0: Infinity,
-            x1: -Infinity,
-            y1: -Infinity
-        }
+        x0: Infinity,
+        y0: Infinity,
+        x1: -Infinity,
+        y1: -Infinity
+    }
     )
     endDeleteBox(e);
     data.boxes.push(new ClipSrc({
@@ -188,9 +237,9 @@ function appendBox(e) {
     });
 }
 
-$('#container').on('mousedown', function(e) {
+$('#container').on('mousedown', function (e) {
     data.overlay.start = getOverlayCoords(e);
-}).on('mouseup', function(e) {
+}).on('mouseup', function (e) {
     if (data.interactions.select.value == "create") {
         endCreateBox(e);
     } else if (data.interactions.select.value == "delete") {
@@ -206,7 +255,7 @@ $('#container').on('mousedown', function(e) {
     drawBoxes(data.pdf.pageNum - 1);
 });
 
-$('#container').on('click', function(e) {
+$('#container').on('click', function (e) {
     let coords = getOverlayCoords(e);
     let active_boxes = data.boxes.filter(b =>
         b.pno == data.pdf.pageNum - 1 &&
@@ -225,7 +274,7 @@ $('#container').on('click', function(e) {
     drawBoxes(data.pdf.pageNum - 1);
 });
 
-$('#container').on('keypress', function(e) {
+$('#container').on('keypress', function (e) {
     let code = e.keyCode || e.which;
     if (data.overlay.active_box == null) return;
     if ('123456789'.includes(code)) {
