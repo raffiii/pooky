@@ -100,7 +100,7 @@ function drawBoxes(pno) {
 
 }
 
-function drawBlockedRegions(pno,part_name=null) {
+function drawBlockedRegions(pno, part_name = null) {
     let part = part_name || document.getElementById('select_part').value;
     let pages = data.doc.info.parts[part].content_pages;
     let inner = pages[pno].inner;
@@ -122,6 +122,7 @@ function drawBlockedRegions(pno,part_name=null) {
 
 function drawPlaced(part, pno) {
     let page = data.doc.info.parts[part].content_pages[pno];
+    var inner = page.inner;
     let ctx = data.preview.preview.getContext('2d');
     let canvas = data.preview.preview;
     let bgCanvas = document.createElement('canvas');
@@ -130,20 +131,28 @@ function drawPlaced(part, pno) {
     let bgCtx = bgCanvas.getContext('2d');
 
     let pnos = new Set(page.content.map(cd => cd.src.pno));
-    pnos.forEach(p => {
-        let boxes = data.boxes.filter(b => b.doc == data.pdfname && b.pno == p);
-        getBoxesOnPage(p, boxes, bgCtx).then(boxes => {
-            boxes.forEach(b => {
-                ctx.putImageData(b.img, b.x0 || b[0], b.y0 || b[1]);
-            });
-        })
-    });
+
+
+
+    pnos.forEach(p =>
+        getBoxesOnPage(p, page.content, bgCtx).then(boxes => {
+            console.log("boxes", boxes);
+            boxes.forEach(b =>{
+                let x = (b.clip.box.x0 || b.clip.box[0]) * data.pdf.scale,
+                    y = (b.clip.box.y0 || b.clip.box[1]) * data.pdf.scale;
+                console.log("drawing", x, y);
+                ctx.putImageData(b.img, x,y)
+            }
+            )
+        }
+        )
+    );
 }
 
 function getBoxesOnPage(pno, boxes, ctx) {
     console.log("get boxes on page", pno, boxes);
-    return data.pdf.doc.getPage(pno).then(async (page) => {
-
+    return data.pdf.doc.getPage(pno + 1).then(async (page) => {
+        let viewport = page.getViewport({ scale: data.pdf.scale });
         // Render PDF page into background canvas context
         var renderContext = {
             canvasContext: ctx,
@@ -151,19 +160,16 @@ function getBoxesOnPage(pno, boxes, ctx) {
         };
         var renderTask = page.render(renderContext);
 
-        return await renderTask.promise.then(function () {
-            boxes.filter(b => b.pno == pno).map(b => {
-                if (b.pno == pno) {
-                    let scale = data.pdf.scale;
-                    let x = b.src.box.x0 * scale,
-                        y = b.src.box.y0 * scale,
-                        w = (b.src.box.x1 - b.src.box.x0) * scale,
-                        h = (b.src.box.y1 - b.src.box.y0) * scale;
-                    return { img: ctx.getImageData(x, y, w, h), box: b.box };
-                }
-                return { img: null, box: b.box };
+        return await renderTask.promise.then(() =>
+            boxes.filter(b => b.src.pno == pno).map(b => {
+                let scale = data.pdf.scale;
+                let x = b.src.box.x0 * scale,
+                    y = b.src.box.y0 * scale,
+                    w = (b.src.box.x1 - b.src.box.x0) * scale,
+                    h = (b.src.box.y1 - b.src.box.y0) * scale;
+                return { img: ctx.getImageData(x, y, w, h), clip: b };
             })
-        });
+        );
     });
 }
 
