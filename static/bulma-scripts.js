@@ -15,6 +15,14 @@
             });
         }
 
+        function setAction(a) {
+            data.interactions.select.value = a;
+        }
+
+        function setPart(p) {
+            data.interactions.part.value = p;
+        }
+
         // Add a click event on buttons to open a specific modal
         (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
             const modal = $trigger.dataset.target;
@@ -38,8 +46,28 @@
         document.addEventListener('keydown', (event) => {
             const e = event || window.event;
 
-            if (e.keyCode === 27) { // Escape key
-                closeAllModals();
+            switch(e.code) {
+                case 'Escape':
+                    closeAllModals();
+                    break;
+                case 'KeyA':
+                    setAction('add');
+                    break;
+                case 'KeyD':
+                    setAction('delete');
+                    break;
+                case 'KeyG':
+                    setAction('group');
+                    break;
+                case 'KeyC':
+                    setAction('create');
+                    break;
+
+            }
+            for(let i = 0; i < data.doc.info.parts.length; i++) {
+                if(e.code == 'Digit' + (i + 1)) {
+                    setPart(i);
+                }
             }
         });
     }
