@@ -141,18 +141,20 @@ function drawPlaced(part, pno) {
     let pnos = new Set(page.content.map(cd => cd.src.pno));
 
 
-
-    pnos.forEach(p =>
-        getBoxesOnPage(p, page.content, bgCtx).then(boxes => {
+    function resolveBoxes(pnos) {
+        pnos = [...pnos]
+        let p = pnos.pop()
+        return getBoxesOnPage(p, page.content, bgCtx).then(boxes => {
             boxes.forEach(b => {
                 let x = (b.clip.box.x0 || b.clip.box[0]) * data.pdf.scale,
                     y = (b.clip.box.y0 || b.clip.box[1]) * data.pdf.scale;
                 ctx.putImageData(b.img, x, y)
-            }
-            )
-        }
-        )
-    );
+            });
+            if (pnos.length>0)
+                resolveBoxes(pnos);
+        });
+    }
+    resolveBoxes(pnos);
 }
 
 function getBoxesOnPage(pno, boxes, ctx) {
@@ -291,7 +293,7 @@ $('#container').on('mousedown', function (e) {
         default:
             break;
     }
-    
+
 
     drawBoxes(data.pdf.pageNum - 1);
 });
