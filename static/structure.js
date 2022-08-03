@@ -112,11 +112,16 @@ const page_defaults = {
 };
 
 class Page {
-    constructor(page = {}) {
+    constructor(page = {},clear_content=false) {
         this.__name__ = "Page";
         this.template = page.template || page_defaults.template;
-        this.inner = page.inner || page_defaults.inner;
-        this.content = page.content || page_defaults.content;
+        this.inner = {...(page.inner || page_defaults.inner)};
+        this.content = clear_content ? [] : page.content || page_defaults.content;
+
+    }
+
+    copy() {
+        return new Page(this,true);
     }
 
     convert_list(list) {
@@ -175,12 +180,12 @@ class Part {
 
     insert_box(src) {
         if (this.content_pages.length == 0) {
-            this.content_pages.push(new Page(this.first));
+            this.content_pages.push(this.first.copy());
         }
         let success =
             this.content_pages[this.content_pages.length - 1].insert_box(src);
         if (!success) {
-            let page = new Page(this.page);
+            let page = this.page.copy();
             this.content_pages.push(page);
             page.insert_box(src, true);
         }

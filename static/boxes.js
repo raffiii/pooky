@@ -50,6 +50,16 @@ function overlaps(b, c) {
     return !(b.x1 < c.x0 || b.x0 > c.x1 || b.y1 < c.y0 || b.y0 > c.y1);
 }
 
+function intersection(a, b) {
+    if (!overlaps(a, b)) return null;
+    return {
+        x0: Math.max(a.x0, b.x0),
+        x1: Math.min(a.x1, b.x1),
+        y0: Math.max(a.y0, b.y0),
+        y1: Math.min(a.y1, b.y1)
+    }
+}
+
 function merge_overlapping_boxes(boxes) {
     let merged = boxes.slice();
     var overlapping = false;
@@ -81,7 +91,6 @@ function merge_overlapping_boxes(boxes) {
 
 
 function drawBoxes(pno) {
-    console.log("draw boxes", pno);
     let boxes = data.boxes.filter(b => b.doc == data.pdfname && b.pno == pno);
     let ctx = data.overlay.overlay.getContext('2d');
     let canvas = data.overlay.overlay;
@@ -115,7 +124,6 @@ function drawBlockedRegions(pno, part_name = null) {
         y = c.y0 * scale,
         w = (c.x1 - c.x0) * scale,
         h = (c.y1 - c.y0) * scale;
-    console.log("draw blocked regions", pno, x, y, w, h);
     ctx.fillRect(x, y, w, h);
     drawPlaced(part, pno);
 }
@@ -136,12 +144,10 @@ function drawPlaced(part, pno) {
 
     pnos.forEach(p =>
         getBoxesOnPage(p, page.content, bgCtx).then(boxes => {
-            console.log("boxes", boxes);
-            boxes.forEach(b =>{
+            boxes.forEach(b => {
                 let x = (b.clip.box.x0 || b.clip.box[0]) * data.pdf.scale,
                     y = (b.clip.box.y0 || b.clip.box[1]) * data.pdf.scale;
-                console.log("drawing", x, y);
-                ctx.putImageData(b.img, x,y)
+                ctx.putImageData(b.img, x, y)
             }
             )
         }
@@ -150,7 +156,6 @@ function drawPlaced(part, pno) {
 }
 
 function getBoxesOnPage(pno, boxes, ctx) {
-    console.log("get boxes on page", pno, boxes);
     return data.pdf.doc.getPage(pno + 1).then(async (page) => {
         let viewport = page.getViewport({ scale: data.pdf.scale });
         // Render PDF page into background canvas context
@@ -161,7 +166,9 @@ function getBoxesOnPage(pno, boxes, ctx) {
         var renderTask = page.render(renderContext);
 
         return await renderTask.promise.then(() =>
-            boxes.filter(b => b.src.pno == pno).map(b => {
+            boxes.filter(b => b.src.pno == pno).filter(b =>
+                b.src.box.x0 < b.src.box.x1 && b.src.box.y0 < b.src.box.y1
+            ).map(b => {
                 let scale = data.pdf.scale;
                 let x = b.src.box.x0 * scale,
                     y = b.src.box.y0 * scale,
@@ -198,7 +205,6 @@ function endDeleteBox(e) {
         y1: coords.y,
     };
 
-    console.log("delete box", box);
     data.boxes = data.boxes.filter(b => {
         return b.pno != data.pdf.pageNum - 1 || !(
             b.box.x0 >= box.x0 &&
@@ -236,6 +242,24 @@ function endGroupBox(e) {
 
 }
 
+function endTrimBoxes(e) {
+    let coords = getOverlayCoords(e);
+    var box = {
+        x0: data.overlay.start.x,
+        y0: data.overlay.start.y,
+        x1: coords.x,
+        y1: coords.y,
+    };
+    data.boxes = data.boxes.map(b => {
+        if (b.pno == data.pdf.pageNum - 1) {
+            c = new ClipSrc(b);
+            c.box = intersection(box, b.box);
+            return c;
+        }
+        return b;
+    }).filter(b => b.box != null);
+}
+
 function appendBox(e) {
     let boxes = merge_overlapping_boxes(getContainedBoxes(e));
     boxes.forEach(b => {
@@ -246,17 +270,28 @@ function appendBox(e) {
 $('#container').on('mousedown', function (e) {
     data.overlay.start = getOverlayCoords(e);
 }).on('mouseup', function (e) {
-    if (data.interactions.select.value == "create") {
-        endCreateBox(e);
-    } else if (data.interactions.select.value == "delete") {
-        endDeleteBox(e);
-    } else if (data.interactions.select.value == "group") {
-        endGroupBox(e);
-    } else if (data.interactions.select.value == "add") {
-        appendBox(e);
-        let pno = data.doc.info.parts[document.getElementById('select_part').value].content_pages.length;
-        drawBlockedRegions(pno - 1);
+    switch (data.interactions.select.value) {
+        case "create":
+            endCreateBox(e);
+            break;
+        case "delete":
+            endDeleteBox(e);
+            break;
+        case "group":
+            endGroupBox(e);
+            break;
+        case "add":
+            appendBox(e);
+            let pno = data.doc.info.parts[document.getElementById('select_part').value].content_pages.length;
+            drawBlockedRegions(pno - 1);
+            break;
+        case "trim":
+            endTrimBoxes(e);
+            break;
+        default:
+            break;
     }
+    
 
     drawBoxes(data.pdf.pageNum - 1);
 });

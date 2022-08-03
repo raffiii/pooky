@@ -62,6 +62,15 @@
                 case 'KeyC':
                     setAction('create');
                     break;
+                case 'KeyT':
+                    setAction('trim');
+                    break;
+                case 'KeyF':
+                    document.getElementById('next').click()
+                    break;
+                case 'KeyB':
+                    document.getElementById('prev').click()
+                    break;
 
             }
             for(let i = 0; i < data.doc.info.parts.length; i++) {
