@@ -42,11 +42,19 @@
             });
         });
 
+        document.getElementById("remove_box").addEventListener('click', () => removeLastBox());
+
         // Add a keyboard event to close all modals
         document.addEventListener('keydown', (event) => {
             const e = event || window.event;
 
-            switch(e.code) {
+            if (document.querySelectorAll('.modal.is-active').length > 0) {
+                if (e.code == "Escape") closeAllModals();
+                // Block all other shortcuts
+                return;
+            }
+
+            switch (e.code) {
                 case 'Escape':
                     closeAllModals();
                     break;
@@ -71,10 +79,19 @@
                 case 'KeyB':
                     document.getElementById('prev').click()
                     break;
+                case 'KeyG':
+                    document.getElementById('generate_button').click()
+                    break;
+                case 'KeyE':
+                    document.getElementById('edit_header').click()
+                    break;
+                case "KeyR":
+                    removeLastBox();
+                    break;
 
             }
-            for(let i = 0; i < data.doc.info.parts.length; i++) {
-                if(e.code == 'Digit' + (i + 1)) {
+            for (let i = 0; i < data.doc.info.parts.length; i++) {
+                if (e.code == 'Digit' + (i + 1)) {
                     setPart(i);
                 }
             }

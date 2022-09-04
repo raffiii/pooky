@@ -119,7 +119,7 @@ function drawBlockedRegions(pno, part_name = null) {
     ctx.lineWidth = 2;
     ctx.fillStyle = "#BBFFB0";
     let scale = data.pdf.scale;
-    let c = { x0: inner.x0 || inner[0], y0: inner.y0 || inner[1], x1: inner.x1 || inner[2], y1: inner.y1 || inner[3] };
+    let c = { ...inner.x0 };
     var x = c.x0 * scale,
         y = c.y0 * scale,
         w = (c.x1 - c.x0) * scale,
@@ -146,11 +146,11 @@ function drawPlaced(part, pno) {
         let p = pnos.pop()
         return getBoxesOnPage(p, page.content, bgCtx).then(boxes => {
             boxes.forEach(b => {
-                let x = (b.clip.box.x0 || b.clip.box[0]) * data.pdf.scale,
-                    y = (b.clip.box.y0 || b.clip.box[1]) * data.pdf.scale;
+                let x = b.clip.box.x0  * data.pdf.scale,
+                    y = b.clip.box.y0  * data.pdf.scale;
                 ctx.putImageData(b.img, x, y)
             });
-            if (pnos.length>0)
+            if (pnos.length > 0)
                 resolveBoxes(pnos);
         });
     }
@@ -180,6 +180,28 @@ function getBoxesOnPage(pno, boxes, ctx) {
             })
         );
     });
+}
+
+function isIterable(obj) {
+    // checks for null and undefined
+    if (obj == null) {
+        return false;
+    }
+    return typeof obj[Symbol.iterator] === 'function';
+}
+
+
+function removeLastBox() {
+    let part = data.doc.info.parts[data.interactions.part.value];
+    let page = part.content_pages[part.content_pages.length - 1];
+    let last_element = page.content.pop();
+    if (page.content.length == 0) {
+        part.content_pages.pop();
+    }
+    else {
+
+        page.inner.y0 -= last_element.box.y1 - last_element.box.y0;
+    }
 }
 
 function endCreateBox(e) {

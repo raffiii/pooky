@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Test pdfjs</title>
+    <title>Pooky - Klausurenumruch</title>
     <link rel="stylesheet" href="/static/viewer.css">
 </head>
 
@@ -31,9 +31,9 @@
                     </label>
                 </div>
             </li>
-            <li> <button id="generate_button" class="button is-fullwidth is-primary">Generate PDF</button> </li>
+            <li> <button id="generate_button" class="button is-fullwidth is-primary">Generate PDF (G)</button> </li>
             <li>
-                <button class="button is-link js-modal-trigger is-fullwidth" data-target="modal-properties">
+                <button id="edit_header" class="button is-link js-modal-trigger is-fullwidth" data-target="modal-properties">
                 Edit Header
               </button>
             </li>
@@ -46,15 +46,17 @@
 
             <li>
                 <select id="select_origin_mode" class="select is-fullwidth">
-                    <option value="create">Create Boxes</option>
-                    <option value="delete">Delete Boxes</option>
-                    <option value="group">Group Boxes</option>
-                    <option value="add">Add Boxes</option>
-                    <option value="trim">Trim Boxes</option>
+                    <option value="create">Create Boxes (C)</option>
+                    <option value="delete">Delete Boxes (D)</option>
+                    <option value="group">Group Boxes (G)</option>
+                    <option value="add">Add Boxes (A)</option>
+                    <option value="trim">Trim Boxes (T)</option>
                 </select>
             </li>
             <li> <select id="select_part" class="select is-fullwidth">                </select> </li>
-
+            <li>
+                <button id="remove_box" class="button is-fullwidth">Remove Last box (R)</button>
+            </li>
         </ul>
         <p class="menu-label">PDF Navigation</p>
         <ul>
@@ -62,8 +64,8 @@
             <li>
                 <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
             </li>
-            <li> <button id="prev" class="button is-fullwidth is-light">Previous</button> </li>
-            <li><button id="next" class="button is-fullwidth is-light">Next</button></li>
+            <li> <button id="prev" class="button is-fullwidth is-light">Previous (B)</button> </li>
+            <li><button id="next" class="button is-fullwidth is-light">Next (F)</button></li>
 
         </ul>
     </nav>

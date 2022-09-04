@@ -1,8 +1,17 @@
 current_id = 0;
 
+function boxed(b = [0, 0, 0, 0]) {
+    let box = {};
+    box.x0 = b.x0 || b['0'] || b[0] || 0;
+    box.x1 = b.x1 || b['1'] || b[1] || 0;
+    box.y1 = b.y1 || b['3'] || b[3] || 0;
+    box.y0 = b.y0 || b['2'] || b[2] || 0;
+    return box; 
+}
+
 const erase_defaults = {
     color: "#FFFFFF",
-    box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    box: boxed(),
 };
 
 class Erase {
@@ -16,7 +25,7 @@ class Erase {
 const clip_src_defaults = {
     doc: "",
     pno: 0,
-    box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    box: boxed(),
     erase: [],
 };
 
@@ -25,39 +34,39 @@ class ClipSrc {
         this.__name__ = "ClipSrc";
         this.doc = src.doc || clip_src_defaults.doc;
         this.pno = src.pno || clip_src_defaults.pno;
-        this.box = src.box || clip_src_defaults.box;
+        this.box = boxed (src.box || clip_src_defaults.box);
         this.erase = src.erase || clip_src_defaults.erase;
     }
 }
 
 const clip_dst_defaults = {
     src: {},
-    box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    box: boxed(),
 };
 
 class ClipDst {
     constructor(dst = {}) {
         this.__name__ = "ClipDst";
         this.src = dst.src || clip_dst_defaults.src;
-        this.box = dst.box || clip_dst_defaults.box;
+        this.box = boxed(dst.box || clip_dst_defaults.box);
     }
 }
 
 const image_defaults = {
     src: "",
-    box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    box: boxed(),
 };
 
 class ImageBox {
     constructor(image = {}) {
         this.__name__ = "ImageBox";
         this.src = image.src || image_defaults.src;
-        this.box = image.box || image_defaults.box;
+        this.box = boxed(image.box || image_defaults.box);
     }
 }
 
 const text_defaults = {
-    box: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    box: boxed(),
     text: "",
     font: "",
     size: 0,
@@ -69,7 +78,7 @@ const text_defaults = {
 class TextBox {
     constructor(text = {}) {
         this.__name__ = "TextBox";
-        this.box = text.box || text_defaults.box;
+        this.box = boxed(text.box || text_defaults.box);
         this.text = text.text || text_defaults.text;
         this.font = text.font || text_defaults.font;
         this.size = text.size || text_defaults.size;
@@ -107,21 +116,21 @@ class Font {
 
 const page_defaults = {
     template: [],
-    inner: { x0: 0, y0: 0, x1: 0, y1: 0 },
+    inner: boxed(),
     content: [],
 };
 
 class Page {
-    constructor(page = {},clear_content=false) {
+    constructor(page = {}, clear_content = false) {
         this.__name__ = "Page";
         this.template = page.template || page_defaults.template;
-        this.inner = {...(page.inner || page_defaults.inner)};
+        this.inner = boxed(page.inner || page_defaults.inner);
         this.content = clear_content ? [] : page.content || page_defaults.content;
 
     }
 
     copy() {
-        return new Page(this,true);
+        return new Page(this, true);
     }
 
     convert_list(list) {
@@ -144,16 +153,16 @@ class Page {
     insert_box(src, force = false) {
         let width = src.box.x1 - src.box.x0;
         let height = src.box.y1 - src.box.y0;
-        if (height <= this.inner[3] - this.inner[1] || force) {
-            let dst_box = [
-                this.inner[0],
-                this.inner[1],
-                this.inner[0] + width,
-                this.inner[1] + height,
-            ];
+        if (height <= this.inner.y1 - this.inner.y0 || force) {
+            let dst_box = boxed([
+                this.inner.x0,
+                this.inner.y0,
+                this.inner.x0 + width,
+                this.inner.y0 + height,
+            ]);
             let dst = new ClipDst({ src: src, box: dst_box });
             this.content.push(dst);
-            this.inner[1] += height;
+            this.inner.y0 += height;
             return true;
         }
         return false;
