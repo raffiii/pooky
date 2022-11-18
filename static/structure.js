@@ -3,9 +3,9 @@ current_id = 0;
 function boxed(b = [0, 0, 0, 0]) {
     let box = {};
     box.x0 = b.x0 || b['0'] || b[0] || 0;
-    box.x1 = b.x1 || b['1'] || b[1] || 0;
+    box.y0 = b.y0 || b['1'] || b[2] || 0;
+    box.x1 = b.x1 || b['2'] || b[1] || 0;
     box.y1 = b.y1 || b['3'] || b[3] || 0;
-    box.y0 = b.y0 || b['2'] || b[2] || 0;
     return box; 
 }
 
